@@ -11,7 +11,7 @@ $.extend(extData,{
     times : {
         popup: (new Date())-start
     },
-    
+
     sentTimeBeacon: false,
 
     preLoadFactor : 1/2, // amount of vertical viewport size to add for preloading notes in index
@@ -68,7 +68,7 @@ var snEditor, snIndex;
 
 //  ---------------------------------------
 function log(s) {
-          
+
     if (extData.debugFlags.popup)
         logGeneral(s,"popup.js",console);
     if (extData.debugFlags.popup2BG)
@@ -171,17 +171,17 @@ function uiEventListener(eventData, sender, sendResponse) {
         } else if (eventName == "noteupdated") {
             var newNote = new Note(eventData.newnote);
             var oldNote = new Note(eventData.oldnote);
-            
+
             log("EventListener:noteupdated, source=" + eventData.source + ", changed=[" + eventData.changes.changed.join(",") + "], syncNote=" + newNote.isSyncNote());
-            
+
             var delta = newNote.deltaTo(oldNote);
-            
+
             console.log(JSON.stringify(delta))
-            
+
             var pinnedNowOn = !oldNote.isPinned() && newNote.isPinned();
             var pinnedNowOff = oldNote.isPinned() && !newNote.isPinned();
             var pinnedChanged = pinnedNowOn || pinnedNowOff;
-            
+
             var modifyChanged = eventData.changes.changed.indexOf("modifydate")>=0;
             var deleted = !oldNote.isDeleted() && newNote.isDeleted();
             var undeleted = oldNote.isDeleted() && !newNote.isDeleted();
@@ -194,9 +194,9 @@ function uiEventListener(eventData, sender, sendResponse) {
 
             if (deleted) {
                 log("EventListener:noteupdated: deleted");
-                
+
                 if (newNote.$isIndexNote()) {
-                    newNote.$remove();                    
+                    newNote.$remove();
                 }
                 if (newNote.isLastOpen()) {
                     snLastOpen.noteDeleted(newNote.key)
@@ -206,18 +206,18 @@ function uiEventListener(eventData, sender, sendResponse) {
                     needPinnedRefresh = true;
 
                 needTagsRefresh = true;
-                
+
             } else if (undeleted) {
                 log("EventListener:noteupdated: undeleted");
-                
+
                 if (newNote.$isIndexNote())
-                    newNote.$remove();                
-                
+                    newNote.$remove();
+
                 if (pinnedChanged)
                     needPinnedRefresh = true;
 
                 needTagsRefresh = true;
-                
+
             } else if (!newNote.tagsSame(oldNote)) {
                 log("EventListener:noteupdated:tags");
                 needTagsRefresh = true;
@@ -242,7 +242,7 @@ function uiEventListener(eventData, sender, sendResponse) {
             newNote.$update();
 
             if (extData.isTab && newNote.$isEditorNote()) {
-                if (markdownchanged) {                    
+                if (markdownchanged) {
                     snEditor.updateMarkdown(newNote);
                     needTagsRefresh = true;
                 } else if (eventData.changes.changed.indexOf("version") >= 0 && eventData.newnote.systemtags.indexOf("markdown")>=0) {
@@ -250,14 +250,14 @@ function uiEventListener(eventData, sender, sendResponse) {
                 }
             }
             if (eventData.source != "local" &&  newNote.$isEditorNote()) {
-                    var contentChanged = eventData.changes.added.indexOf("content")>=0;                                            
+                    var contentChanged = eventData.changes.added.indexOf("content")>=0;
                     if (contentChanged && newNote.has)
                         snEditor.setNote(eventData.newnote);
             }
             if (needTagsRefresh)
                 snIndex.requestTags();
-            if (needIndexRefresh)                
-                snIndex.requestNotes();                                    
+            if (needIndexRefresh)
+                snIndex.requestNotes();
             if (needPinnedRefresh)
                 snEditor.needCMRefresh("pinned");
             if (needLastOpenRefresh)
@@ -269,15 +269,15 @@ function uiEventListener(eventData, sender, sendResponse) {
                 $("#offline").html("offline");
             else
                 $("#offline").html("");
-        } else if (eventName == "synclistchanged") {            
+        } else if (eventName == "synclistchanged") {
             log("igonring synclistchanged")
         } else if (eventName == "notedeleted") {
             log("EventListener:notedeleted:" + eventData.key);
             $('#' + eventData.key).remove();
             snIndex.requestTags();
-            
-            snLastOpen.noteDeleted(eventData.key);            
-            
+
+            snLastOpen.noteDeleted(eventData.key);
+
             snEditor.hideIfNotInIndex(eventData.key);
         } else {
             log("EventListener:");
@@ -391,7 +391,7 @@ var shortcutListener = function (event) {
 function readyListener() {
 
     tick("ready");
-    
+
     extData.times.ready = (new Date())-start;
 
     try {
@@ -428,7 +428,18 @@ function readyListener() {
             _gaq.push(['_trackEvent', 'popup', 'ready', 'no_email_or_password']);
 
             log("(ready): no email or password");
-            displayStatusMessage(chrome.i18n.getMessage("welcometext", [signUpLink, optionsLink]));
+
+            //Here display login instead.
+  //          $("#y").load("x.html");
+//aaaaaaaaa
+//  $('#notes').html("asd");
+//displayStatusMessage($("#signin").html());
+          // displayStatusMessage(chrome.i18n.getMessage("welcometext", [signUpLink, optionsLink]));
+          setUpForMessage();
+         $('#notes').html($("#signin").html());
+
+
+//$("#signin").show();
 
         } else if ( !SimplenoteSM.credentialsValid() ) {
 
@@ -442,7 +453,7 @@ function readyListener() {
             }
 
         } else {
-            extData.times.startsetup = (new Date())-start;           
+            extData.times.startsetup = (new Date())-start;
 
             //$("body").show();
 
@@ -474,32 +485,32 @@ function readyListener() {
                 $("body").addClass("tab");
             }
 
-            popupi18n();                                                
+            popupi18n();
 
             if (snLastOpen.isOpen()) {
                 extData.currentView = "editor";
-                snEditor = new SNEditor(function() {                    
+                snEditor = new SNEditor(function() {
                     log("(ready): sending request for open to note");
                     snEditor.setNote(SimplenoteLS.getNote(snLastOpen.key()),{
                                     duration:0,
                                     focus: true
                                 });
-//                    NoteFactory(snLastOpen.key(), function(note) {                            
+//                    NoteFactory(snLastOpen.key(), function(note) {
 //                            if (note)
 //                                snEditor.setNote(note,{
 //                                    duration:0,
 //                                    focus: true
-//                                });                            
+//                                });
 //                        });
                 });
             } else {
                 snEditor = new SNEditor();
             }
 
-            snIndex = new SNIndex(); 
+            snIndex = new SNIndex();
             snIndex.snNotelist.request(true);
 
-            $("body").show();                
+            $("body").show();
 //                if (localStorage.option_color_index)
 //                    $("body").css("background-color",localStorage.option_color_index);
 
@@ -525,12 +536,12 @@ function readyListener() {
         }
 
         scheduleGA();
-                
+
 
     } catch (e) {
         exceptionCaught(e);
     }
-    
+
     function popupi18n() {
         $("#q").attr("placeholder",chrome.i18n.getMessage("search_placeholder"));
         $("#q").attr("title",chrome.i18n.getMessage("search_tooltip","alt-q"));
@@ -550,16 +561,19 @@ function readyListener() {
             $('#backtoindex').attr("title",chrome.i18n.getMessage("close_tab_tooltip",["alt-b","alt-x"]));
         else
             $("#backtoindex").attr("title",chrome.i18n.getMessage("backtoindex_tooltip",["alt-b","alt-x"]));
-    
-    }
-    
-    function displayStatusMessage(message) {
-        $('#toolbar').hide();
-        $('#statusbar').hide();
-        $('#note').show();
-        $("body").show();
-        $("#index").show();
 
+    }
+
+    function setUpForMessage(){
+      $('#toolbar').hide();
+      $('#statusbar').hide();
+      $('#note').show();
+      $("body").show();
+      $("#index").show();
+    }
+    function displayStatusMessage(message) {
+
+      setUpForMessage();
         $('#notes').html(message);
         $('body').addClass("message");
 
@@ -569,10 +583,10 @@ function readyListener() {
 
 function SNIndex() {
     this.$ui = $("#index");
-    
-    this.snToolbar = new SNToolbar(this);                    
-    this.snNotelist = new SNNotelist(this);    
-    
+
+    this.snToolbar = new SNToolbar(this);
+    this.snNotelist = new SNNotelist(this);
+
     // bind SYNC div
     $("#sync").click( function() {
         _gaq.push(['_trackEvent', 'popup', 'syncclicked']);
@@ -584,7 +598,7 @@ function SNIndex() {
     $("#snlink").click( function(event) {
         _gaq.push(['_trackEvent', 'popup', 'snlinkclicked']);
         openURLinTab("https://simple-note.appspot.com/",event.ctrlKey || event.altKey);
-    })    
+    })
 }
 
 SNIndex.prototype.requestNotes = function() {
@@ -597,11 +611,11 @@ SNIndex.prototype.requestTags = function() {
 
 function SNToolbar(snIndex) {
     this.$ui = $("#toolbar");
-    
+
     this.snSearchfield = new SNSearchfield(snIndex);
     this.snTagselect = new SNTagselect(snIndex);
     this.snIndex = snIndex;
-    
+
     // bind ADD button
     $('#add').click(function() {
         _gaq.push(['_trackEvent', 'popup', 'addclicked']);
@@ -623,25 +637,25 @@ function SNToolbar(snIndex) {
                 extData.popup.close();
         });
     });
-    
+
 }
 
 SNToolbar.prototype.setHeight = function(to) {
-        
+
     this.$ui.animate({height: to + "px"});
-    this.snIndex.snNotelist.$ui.animate({top: to + 6 + "px"}); 
-    
+    this.snIndex.snNotelist.$ui.animate({top: to + 6 + "px"});
+
 }
 
 function SNSearchfield(snIndex) {
-    
+
     this.$ui = $("#q");
     this.initialwidth = this.$ui.css("width");
     this.snIndex = snIndex;
-    
+
     var that = this;
-        
-    
+
+
     // bind SEARCH field
     this.$ui.bind("keyup", function(event) {
         if (event.which == 13) {
@@ -709,10 +723,10 @@ function SNTagselect(snIndex) {
     // tags stuff
     this.indextag = "#all#";
     this.taginfos = [];
-    
+
     //this.request();
     this.request(true);
-        
+
 }
 
 SNTagselect.prototype.setTag = function(to) {
@@ -721,13 +735,13 @@ SNTagselect.prototype.setTag = function(to) {
 }
 
 
-SNTagselect.prototype.request = function(useLS) {    
+SNTagselect.prototype.request = function(useLS) {
     tock("requestTags");
     var that = this;
-    
+
     if (!useLS) {
-        chrome.extension.sendRequest({action:"tags"}, function(taginfos) {       
-            try {            
+        chrome.extension.sendRequest({action:"tags"}, function(taginfos) {
+            try {
                 that.fillWith(taginfos);
             } catch (e) {
                 exceptionCaught(e);
@@ -735,21 +749,21 @@ SNTagselect.prototype.request = function(useLS) {
         });
     } else
         this.fillWith(SimplenoteLS.getTags());
-    
+
 }
 
 SNTagselect.prototype.fillWith = function(taginfos) {
     tock("buildTagList");
     var that = this;
-    
+
     this.taginfos = taginfos;
     // fill dropdown
     var stillhavetag = false;
-    var style, html = "", taginfo;                        
+    var style, html = "", taginfo;
 
     for (var i=0; i<taginfos.length; i++) {
         taginfo = taginfos[i];
-        style = taginfo.count > 0?"":'style="color:#aaa; text-shadow:1px 1px 1px rgba(0,0,0,0.1)"';                
+        style = taginfo.count > 0?"":'style="color:#aaa; text-shadow:1px 1px 1px rgba(0,0,0,0.1)"';
         if (taginfo.tag == "#all#")
             html += '<option value="" ' + style +  '>' + chrome.i18n.getMessage("tags_all") + ' [' + taginfo.count + ']</option>';
         else if (taginfo.tag == "#notag#")
@@ -773,7 +787,7 @@ SNTagselect.prototype.fillWith = function(taginfos) {
     if (!stillhavetag) {
         this.indextag = "#all#";
     }
-    
+
    // add handler
     this.$ui.unbind();
     this.$ui.html(html);
@@ -788,7 +802,7 @@ SNTagselect.prototype.fillWith = function(taginfos) {
         this.requestNotes();
     }
 
-    tock("buildTagList ende");    
+    tock("buildTagList ende");
 }
 
 function SNNotelist(snIndex) {
@@ -796,7 +810,7 @@ function SNNotelist(snIndex) {
     var that = this;
     // properties
     this.scrolltoselected = true;
-    
+
     // get globals for speed
     this.extData = extData;
     this.snIndex = snIndex;
@@ -804,13 +818,13 @@ function SNNotelist(snIndex) {
     this.storage = localStorage;
     this.click_to_undelete = chrome.i18n.getMessage("click_to_undelete");
     this.click_to_pinunpin = chrome.i18n.getMessage("click_to_pinunpin");
-    this.syncnote_tooltip = chrome.i18n.getMessage("syncnote_tooltip");    
+    this.syncnote_tooltip = chrome.i18n.getMessage("syncnote_tooltip");
     this.created = chrome.i18n.getMessage("created");
     this.modified = chrome.i18n.getMessage("modified");
     this.published_tooltip = chrome.i18n.getMessage("published_tooltip");
     this.sharer_tooltip = chrome.i18n.getMessage("sharer_tooltip");
     this.sharee_tooltip = chrome.i18n.getMessage("sharee_tooltip");
-    
+
     $.timeago.settings.strings= {
         prefixAgo: null,
         prefixFromNow: null,
@@ -829,58 +843,58 @@ function SNNotelist(snIndex) {
         years:      chrome.i18n.getMessage("years"),
         numbers: []
     }
-    
+
     this.$ui.delegate(".statusicon-clickable","click",statusIconClickHandler)
             .delegate(".noterow","click",noteRowClickHandler);
-        
-    //this.request();    
-    
+
+    //this.request();
+
     function statusIconClickHandler(event) {
-        
+
         if (event.which != 1) {
             return;
         }
-        
+
         var $src = $(event.srcElement);
         var note = that.getNote($src.parent(".noterow").attr("id"));
-        
+
         if (!note)
             return;
-        
-        if ($src.hasClass("pin-toggle") && $src.hasClass("active")) {                                                
+
+        if ($src.hasClass("pin-toggle") && $src.hasClass("active")) {
             note.systemtags.splice(note.systemtags.indexOf("pinned"),1);
             chrome.extension.sendRequest({action:"update", key:note.key, systemtags:note.systemtags});
         } else if ($src.hasClass("pin-toggle")) {
             note.systemtags.push("pinned");
             chrome.extension.sendRequest({action:"update", key:note.key, systemtags:note.systemtags});
-        } else if ($src.hasClass("published-toggle")) {                
-            openURLinTab("https://simple-note.appspot.com/publish/"+note.publishkey, event.ctrlKey || event.altKey );                
+        } else if ($src.hasClass("published-toggle")) {
+            openURLinTab("https://simple-note.appspot.com/publish/"+note.publishkey, event.ctrlKey || event.altKey );
              // bind published click
         } else if ($src.hasClass("shared-toggle")) {
-            openURLinTab("https://simple-note.appspot.com/#note="+note.key, event.ctrlKey || event.altKey );                
+            openURLinTab("https://simple-note.appspot.com/#note="+note.key, event.ctrlKey || event.altKey );
         } else if ($src.hasClass("webnote-icon")) {
             var wnm = note.content.match(extData.webnotereg);
-            if (wnm)                
-                openURLinTab(wnm[1], event.ctrlKey || event.altKey );                
-        } 
-        
+            if (wnm)
+                openURLinTab(wnm[1], event.ctrlKey || event.altKey );
+        }
+
         event.stopPropagation();
         event.preventDefault();
-        
+
     }
-    
-    function noteRowClickHandler(event) {     
+
+    function noteRowClickHandler(event) {
         if (event.which != 1) {
             return;
         }
-        
-        var $src = $(event.srcElement);        
+
+        var $src = $(event.srcElement);
         var note = that.getNote($src.parent(".noterow").attr("id"));
         if (!note)
             note = that.getNote($src.attr("id"));
-        
+
         if (note.deleted == 0) {
-            
+
             if (extData.isTab && snEditor.note) {
                 if (snEditor.note.key == note.key)
                     return;
@@ -908,7 +922,7 @@ SNNotelist.prototype.getNote = function(key) {
     return this.notes.filter(function(n) {return n.key == key})[0];
 }
 
-SNNotelist.prototype.request = function(useLS) {   
+SNNotelist.prototype.request = function(useLS) {
     tick("requestNotes");
     var that = this;
 
@@ -919,31 +933,31 @@ SNNotelist.prototype.request = function(useLS) {
     if ((localStorage.option_hidewebnotes == undefined || localStorage.option_hidewebnotes == "true") && (req.tag == "" || req.tag == "#all#"))
         req     = mergeobj(req, {notregex: extData.webnoteregstr});
 
-    //log("requestNotes: " + JSON.stringify(req));    
+    //log("requestNotes: " + JSON.stringify(req));
     if (!useLS)
         chrome.extension.sendRequest(req, function(notes) {
             try {
 
-                that.fillWith(notes);                        
+                that.fillWith(notes);
 
             } catch (e) {
                 exceptionCaught(e);
             }
-        });    
-    else 
+        });
+    else
         this.fillWith(SimplenoteLS.getNotes(req));
 }
 
 SNNotelist.prototype.fillWith = function(notes) {
     tock("buildNoteList");
-    
+
     var addContent = true;
-    
+
     this.notes = notes;
-    
+
     if (extData.isTab || extData.currentView == "index")
         $("#index").show();
-        
+
     var note, noteshtmlary=[];
 
     this.$ui.unbind("scroll");
@@ -951,8 +965,8 @@ SNNotelist.prototype.fillWith = function(notes) {
     if (notes.length > 0) {
 
         for( var i = 0; i < notes.length; i ++ ) {
-            note = notes[i];                
-            noteshtmlary.push(this.noteRawHTML(note, (i<15 || addContent) && note.content != undefined));    
+            note = notes[i];
+            noteshtmlary.push(this.noteRawHTML(note, (i<15 || addContent) && note.content != undefined));
             // need for scroll selected into view
             if (snLastOpen.isKey(note.key))
                 addContent = false;
@@ -972,19 +986,19 @@ SNNotelist.prototype.fillWith = function(notes) {
                                                           $(this.target).addClass("highlightednote");
                                                       },
                                                       hideSpeed:10,
-                                                      onBeforeHide:function() {                                                                      
+                                                      onBeforeHide:function() {
                                                           $(this.target).removeClass("highlightednote");
                                                       },
                                                       delegate: "div#notes",
                                                       otherBodies: extData.isTab?function() {return snEditor.$CMbody()} :null,
                                                       scrollRemove: "div#notes"
-                                              }).show();                                             
+                                              }).show();
 
         this.$ui.show();
 
         tock("buildNoteList: notes show");
 
-        // bind timeago for time abbr                    
+        // bind timeago for time abbr
         if (localStorage.option_showdate == "true")
             $("#index abbr.notetime").timeago();
 
@@ -1005,12 +1019,12 @@ SNNotelist.prototype.fillWith = function(notes) {
     if (!extData.sentTimeBeacon) {
         log("requestNotes(async):sending time beacon");
          _gaq.push(['_trackEvent', 'popup', 'ready', 'endfillindex',extData.times.endfillindex]);
-         extData.sentTimeBeacon = true;         
-        snHelpers.printTimes();    
-    }        
-    
+         extData.sentTimeBeacon = true;
+        snHelpers.printTimes();
+    }
+
     tock("buildNoteList end");
-    
+
     //this.snIndex.snToolbar.setHeight(65);
 
     function noteRowCMfn(contextmenu) {
@@ -1080,19 +1094,19 @@ SNNotelist.prototype.fillWith = function(notes) {
         }
 
     }
-    
+
 }
 
 SNNotelist.prototype.noteRawHTML = function(note, addcontent, show) {
-    
+
     var note = new Note(note);
-    
+
     var date, prefix, shareds = [];
     var rowtitle = "", pintitle = "", sharetitle = "", headingtext = "", headinghtml = "", headingtitle = "", html = "", abstracthtml = "", url = "";
     var rowstyles = show?[]:["display:none"], thisclasses = ["noterow"];
-        
+
     addcontent &= (note.content != undefined);
-    
+
     if (!addcontent) {
          thisclasses.push("nocontent");
          rowstyles.push("height: " + (20 + this.storage.option_abstractlines*14) + "px");
@@ -1107,16 +1121,16 @@ SNNotelist.prototype.noteRawHTML = function(note, addcontent, show) {
 
         if (headingtext.length > 25 && note.deleted != 1)
             headingtitle = headingtext;
-                    
+
         // abstract
         if (this.storage.option_abstractlines>=0)
             abstracthtml = lines.slice(1,Math.min(lines.length,this.storage.option_abstractlines*1+1));
         else // -1 ~ all
             abstracthtml = lines;
         // set actual abstract
-        
+
         abstracthtml = htmlEncode(abstracthtml,100).join("<br/>");
-        
+
         var wnm = note.content.match(extData.webnotereg);
         if (wnm ) {
             url = wnm[1];
@@ -1132,12 +1146,12 @@ SNNotelist.prototype.noteRawHTML = function(note, addcontent, show) {
         thisclasses.push("selectednote");
     }
     if (note.deleted == 1) {
-        thisclasses.push("noterowdeleted");            
+        thisclasses.push("noterowdeleted");
         rowtitle = " title='" + this.click_to_undelete + "'";
     } else {
         pintitle = " title='" + this.click_to_pinunpin + "'";
     }
-    
+
     if (note._score != undefined) {
         //html = note._score + " - " + html;
         if (note._score >= 1)
@@ -1146,13 +1160,13 @@ SNNotelist.prototype.noteRawHTML = function(note, addcontent, show) {
             thisclasses.push("partialhit");
     }
 
-    
+
     var sortattrs = " modifydate='" + note.modifydate + "'";
     sortattrs += " createdate='" + note.createdate + "'";
     sortattrs += " notetitle='" + note.title() + "'";
-    sortattrs += " version='" + note.version + "'";    
-    sortattrs += " syncnum='" + note.syncnum + "'"; 
-    sortattrs += " pinned='" + note.isPinned() + "'"; 
+    sortattrs += " version='" + note.version + "'";
+    sortattrs += " syncnum='" + note.syncnum + "'";
+    sortattrs += " pinned='" + note.isPinned() + "'";
 
     // assemble noterow html string
     html = "<div class='" + thisclasses.join(" ") + "' id='" + note.key  + "' style='" + rowstyles.join(";") + "'" + rowtitle + sortattrs + ">";
@@ -1188,36 +1202,36 @@ SNNotelist.prototype.noteRawHTML = function(note, addcontent, show) {
                 if (validateEmail(note.tags[i])) {
                     shareds.push(note.tags[i]);
                 }
-            }     
+            }
             if (shareds.length > 0)
                 sharetitle = this.sharer_tooltip + " " + shareds.join(", ");
             else
                 sharetitle = this.sharee_tooltip;
         }
-        
+
         if (sharetitle)
             html+=  "<div class='shared-toggle statusicon-clickable active' title='" + sharetitle + "'></div>";
         else
             html+=  "<div class='shared-toggle statusicon-clickable'></div>";
-        
-        
-        if (addcontent && url != "") {           
-            html += "<div class='webnote-icon statusicon-clickable active'" + (note.deleted == 0?" title='" + chrome.i18n.getMessage("webnote_icon",url) + "'":"") + "></div>";                
+
+
+        if (addcontent && url != "") {
+            html += "<div class='webnote-icon statusicon-clickable active'" + (note.deleted == 0?" title='" + chrome.i18n.getMessage("webnote_icon",url) + "'":"") + "></div>";
         } else {
-            html += "<div class='webnote-icon statusicon-clickable'></div>";                
+            html += "<div class='webnote-icon statusicon-clickable'></div>";
         }
-    
+
     // #heading
-    html+=              "<div class='noteheading'" + (headingtitle != ""?" title='" + headingtitle + "'":"") + "> " + headinghtml + "</div>";    
+    html+=              "<div class='noteheading'" + (headingtitle != ""?" title='" + headingtitle + "'":"") + "> " + headinghtml + "</div>";
     // #abstract
     html+=              "<div class='abstract'>" + abstracthtml + "</div>";
-    
+
     //html+=              "<div class='sortkey'></div>";
 
-    html+="</div>";       
-   
+    html+="</div>";
+
     return html;
-    
+
     // encode string or string array into html equivalent
     function htmlEncode(s, maxchars)
     {
@@ -1252,29 +1266,29 @@ SNNotelist.prototype.noteRawHTML = function(note, addcontent, show) {
 
 SNNotelist.prototype._sortBy = function(what, direction) {
     tick();
-    if(direction == undefined) direction = 1;    
-    
+    if(direction == undefined) direction = 1;
+
 //    $("#notes div.noterow").each(function(i,e) {
-//        $("div.sortkey",e).html($(e).attr(what));        
+//        $("div.sortkey",e).html($(e).attr(what));
 //    })
     var comparator;
-    
-    switch(what) {                
+
+    switch(what) {
         case "notetitle":
-            comparator = function($a,$b) {                
+            comparator = function($a,$b) {
                 return $b.attr(what) < $a.attr(what)?direction:-1*direction;
             };
             break;
         default:
-            comparator = function($a,$b) {                
+            comparator = function($a,$b) {
                 return ($b.attr(what) - $a.attr(what))*direction;
             };
             break;
     }
-    
-    
+
+
     var $notes = $("#notes");
-    var $last = null;        
+    var $last = null;
     $("#notes div.noterow")
                 .sort(function(a,b) {
                     var $a=$(a), $b=$(b);
@@ -1283,12 +1297,12 @@ SNNotelist.prototype._sortBy = function(what, direction) {
                     if (d==0)
                         return comparator($a,$b)
                     else
-                        return d;      
-                    
+                        return d;
+
                 })
-                .each(function(i){                    
+                .each(function(i){
                     // at this point the array is sorted, so we can just detach each one from wherever it is, and add it after the last
-                    var node = $(this);        
+                    var node = $(this);
                     if ($last) {
                         $last.after(node);
                     } else {
@@ -1296,8 +1310,8 @@ SNNotelist.prototype._sortBy = function(what, direction) {
                     }
                     $last = node;
                 });
- 
- 
+
+
     snHelpers.checkInView();
     tock("sorted");
 }
@@ -1305,7 +1319,7 @@ SNNotelist.prototype._sortBy = function(what, direction) {
 SNNotelist.prototype.setSort = function(what, dir) {
     if (this.sort == what)
         return;
-    
+
     this.sort = what;
     this.sort_dir = dir;
     this.reSort();
@@ -1387,19 +1401,19 @@ function SNEditor(onLoad) {
                     //addscripts : ["/javascripts/lib/sscr.js","/javascripts/lib/middlemouse.js"],
                     onLoad: onLoad?onLoad:function() {}
                 });
-    
+
     // set ids for important nodes
     $(".cm-iframe").attr("id","cmiframe");
     $(".CodeMirror-wrapping").attr("id","cmwrapper");
 
     $("#cmwrapper").css("position","");
     $("#cmwrapper").css("height","");
-    $("#cmiframe").attr("tabindex","2");   
+    $("#cmiframe").attr("tabindex","2");
     $("#cmwrapper").append("<div id='markdownpreviewspacer'></div>");
     $("#cmwrapper").append("<div id='markdownpreview'><span id='markdowninfo'></span></div>");
 
     this.dirty={content: false, tags: false, pinned: false};
-        
+
 }
 
 SNEditor.prototype.$CMbody = function () {
@@ -1452,15 +1466,15 @@ SNEditor.prototype.setFont = function() {
     }
     //
     // set colors
-    if (localStorage.option_color_editor) {        
-        $("#cmiframe").css("background-color",localStorage.option_color_editor);        
+    if (localStorage.option_color_editor) {
+        $("#cmiframe").css("background-color",localStorage.option_color_editor);
     }
     if (localStorage.option_color_editor_font)
         $editbox.css("color",localStorage.option_color_editor_font);
-    
-    
+
+
     if (localStorage.option_gpuaccel == "true") {
-        $editbox.css("-webkit-transform","translateZ(0)");    
+        $editbox.css("-webkit-transform","translateZ(0)");
         $("#markdownpreview").css("-webkit-transform","translateZ(0)");
         $("#markdownpreviewspacer").css("-webkit-transform","translateZ(0)");
     }
@@ -1605,7 +1619,7 @@ SNEditor.prototype.initialize = function() {
 
             that.setPreviewtoggle(!that.isPreviewtoggle());
 
-            localStorage.markdown_preview = that.isPreviewtoggle();            
+            localStorage.markdown_preview = that.isPreviewtoggle();
             that.focus();
         });
         this.setPreviewtoggle(localStorage.markdown_preview == undefined || localStorage.markdown_preview == "true");
@@ -1624,7 +1638,7 @@ SNEditor.prototype.initialize = function() {
                 //that.saveCaretScroll();
                 that.codeMirror.setCode(note.content);
                 that.updateMarkdown();
-                that.restoreCaretScroll();                
+                that.restoreCaretScroll();
             }
             // reset tags
             if (that.dirty.tags)
@@ -1636,7 +1650,7 @@ SNEditor.prototype.initialize = function() {
             }
 
             if (that.dirty.markdown) {
-                that.setMarkdownToggle(note.systemtags.indexOf("markdown")>=0);                
+                that.setMarkdownToggle(note.systemtags.indexOf("markdown")>=0);
             }
 
             that.hideRevert();
@@ -1737,17 +1751,17 @@ SNEditor.prototype.initialize = function() {
                 return;
             }
             if ($(this).css("left") == "0%")
-                return;            
+                return;
         }).click( function (event) {
             if (event.which == 1)
                 $("#markdownpreviewspacer").click();
         }).bind("mousewheel", function(event) {
-            
-            //console.log("mousewheel %s", event.wheelDelta);            
+
+            //console.log("mousewheel %s", event.wheelDelta);
             event.stopPropagation();
             that.syncScrolls("","mousewheel",event.wheelDelta);
         });
-        
+
         $("#markdownpreviewspacer").click(function() {
             $("#markdownpreviewspacer").toggleClass("max");
             $("#markdownpreview").toggleClass("max");
@@ -1779,10 +1793,10 @@ SNEditor.prototype.initialize = function() {
             });
         }
         // add context menu
-        this.makeContextMenu();        
-        
+        this.makeContextMenu();
+
         this.initialized = true;
-                
+
 
     } catch (e) {
         exceptionCaught(e);
@@ -1803,26 +1817,26 @@ SNEditor.prototype.scrollPreviewTo = function(scroll) {
 
 SNEditor.prototype.syncScrolls = function(direction, method, delta) {
     var source, target, sourceScroll, $mdp = $("#markdownpreview");
-    
+
     log("syncscroll")
 
     if (!$mdp.is(":visible"))
         return;
 
     if (direction == "fromeditor") {
-        source = this.$CMbody().get(0);        
+        source = this.$CMbody().get(0);
         target = $mdp.get(0);
         this.holdmarkdownscroll = true;
     } else {
         target = this.$CMbody().get(0);
         source = $mdp.get(0);
     }
-            
-    if (method == "mousewheel") {                
+
+    if (method == "mousewheel") {
         var newST = (source.scrollTop-delta) * (target.scrollHeight - source.clientHeight) / (source.scrollHeight - source.clientHeight);
-        
+
         //console.log("(%s - %s)*(%s - %s)/(%s-%s) = %s", source.scrollTop, delta, target.scrollHeight, target.clientHeight, source.scrollHeight, source.clientHeight, newST)
-        
+
         this.scrollEditorTo({top: newST, left: 0});
         this.scrollPreviewTo({top: source.scrollTop-delta, left: 0});
     } else {
@@ -1830,7 +1844,7 @@ SNEditor.prototype.syncScrolls = function(direction, method, delta) {
         var newST = source.scrollTop * (target.scrollHeight - target.clientHeight) / (source.scrollHeight - source.clientHeight);
 
         $(target).scrollTop(Math.round(newST));
-        
+
     }
 }
 
@@ -1943,9 +1957,9 @@ SNEditor.prototype.hideIfNotInIndex = function (key) {
                     $("#note").hide();
                 });
         } else
-            $("#note").hide();        
+            $("#note").hide();
     } else if (this.note)
-        this.show();    
+        this.show();
 
     if ($('#q').val() == "")
         snHelpers.scrollSelectedIntoView();
@@ -2022,7 +2036,7 @@ SNEditor.prototype.setNote = function(note, options) {
 
     this.setFont();
     this.initialize();
-    
+
     this.note = note;
     if (options.isnewnote)
         this.note.content = "";
@@ -2040,9 +2054,9 @@ SNEditor.prototype.setNote = function(note, options) {
         if (!extData.isTab) {
             $('#popout').show();
         }
-        
+
         snLastOpen.openTo(note.key);
-        
+
         this.needCMRefresh("lastopen");
     }
 
@@ -2169,7 +2183,7 @@ SNEditor.prototype.saveNote = function(callback) {
                 that.clearDirty();
             }
             if (that.note && that.note.key == "") {
-                
+
             }
             log("CodeMirror.saveNote: request complete");
             if (callback && typeof callback == "function")
@@ -2441,7 +2455,7 @@ SNEditor.prototype.updateMarkdown = function(input,nocache) {
 //    var html = converter.makeHtml(m);
     //var html = markdown.toHTML(m);
     //var html = Markdown(m);
-    
+
     if (typeof input == "string") {
         log("updating markup locally");
         var converter = new Showdown.converter();
@@ -2467,11 +2481,11 @@ SNEditor.prototype.updateMarkdown = function(input,nocache) {
 
             this.setMarkdownHtml(snEditor.markupCache[key].html, server, serverTitle)
         } else {
-            //$("#markdownpreview").addClass("loading");            
+            //$("#markdownpreview").addClass("loading");
             $("#markdowninfo").css("right", (cssprop("#note","right") + 35) + "px")
                             .html("&nbsp;")
                             .addClass("loading");
-                
+
             $.ajax({
                     url: "https://simple-note.appspot.com/markdown/" + key + "/" + version,
                     timeout: 5000,
@@ -2511,7 +2525,7 @@ SNEditor.prototype.setMarkdownHtml = function(html, info, moreinfo) {
     }
 
     $("#markdowninfo").css("right", (cssprop("#note","right") + 35) + "px");
-    $("#markdowninfo").click(function(event) {        
+    $("#markdowninfo").click(function(event) {
         snEditor.updateMarkdown(undefined,true);
         event.stopPropagation();
     });
@@ -2533,12 +2547,12 @@ SNEditor.prototype.print = function() {
 
 SNEditor.prototype.showRevert = function() {
     if (!extData.isTab)
-        $('#revert').show();    
+        $('#revert').show();
     this.adjustTagsWidth();
 }
 
 SNEditor.prototype.hideRevert = function() {
-    $('#revert').hide();    
+    $('#revert').hide();
     this.adjustTagsWidth();
 }
 
@@ -2590,23 +2604,23 @@ var snHelpers = {
     checkInView: function() {
         //tick();
         var $inView = snHelpers.getInView("#notes div.nocontent");
-        
+
         $inView.each(function(i,e) {
             $(e).replaceWith(snIndex.snNotelist.noteRawHTML(snIndex.snNotelist.getNote(e.id), true, true));
             if (localStorage.option_showdate == "true")
                 $("#" + e.id + " abbr.notetime").timeago();
         });
-        
-        
+
+
 
         //tock("checkinview");
     },
-    
+
     //  ---------------------------------------
     // from inview.js
     getInView: function(sel) {
         //tick();
-        var elements = $(sel).get(), i = 0, viewportSize, viewportOffset;        
+        var elements = $(sel).get(), i = 0, viewportSize, viewportOffset;
         var elementsLength = elements.length;
         var res = [];
 
@@ -2627,7 +2641,7 @@ var snHelpers = {
                     height: $element.height(),
                     width: $element.width()
                 },
-                elementOffset = $element.offset(),                
+                elementOffset = $element.offset(),
                 inview        = false;
 
                 //log("checkInView:elementSize=[" + elementSize.height + "," + elementSize.width + "], elementOffset=[" + elementOffset.left + "," + elementOffset.top + "]");
@@ -2682,11 +2696,11 @@ var snHelpers = {
             callback(headings(notes,full));
         });
     },
-        
+
     noteRowInIndex: function(key) {
         return $('#' + key).length > 0;
     },
-        
+
     trashNote: function(key) {
         chrome.extension.sendRequest({action : "update", key : key, deleted: 1},
             function() {
@@ -2701,7 +2715,7 @@ var snHelpers = {
                 snEditor.hideIfNotInIndex();
                 snHelpers.checkInView();
             });
-    }    
+    }
 }
 
 $(document).ready(readyListener);
